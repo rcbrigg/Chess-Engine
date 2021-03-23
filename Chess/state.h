@@ -35,9 +35,11 @@ struct MovePool
 	void add(Move move)
 	{
 		assert(count < MAX_MOVES);
+		assert((move.to | move.from) < 64);
 		moves[count++] = move;
 	}
 };
+
 struct State
 {
 	enum Color : u8
@@ -90,6 +92,13 @@ struct State
 		}
 	};
 
+	struct Undo
+	{
+		Move move;
+		Piece captured_piece;
+		u32 hash;
+	};
+
 	// Each element represents a square, 0 if empty or (Color | Type)
 	Piece board[64];
 
@@ -111,7 +120,7 @@ struct State
 
 	i16 value;
 
-	// u32 hash;
+	u32 hash;
 
 	void init();
 
@@ -122,6 +131,12 @@ struct State
 	void get_valid_moves(MovePool& moves) const;
 
 	void move(Move move);
+
+	void move(Move move, u32 new_hash);
+
+	void unmove(Undo& undo);
+
+	u32 hash_move(Move move) const;
 
 	bool from_FEN(string FEN);
 
@@ -154,13 +169,7 @@ private:
 
 	const char* square_to_notation(u8 square) const;
 
-	static u32 hash_piece(Piece piece, u32 square);
-
 	void set_en_passant(u8 square);
 
 	void set_castle_rights(u8 rights);
-
-	void remove_piece(u32 square);
-
-	void add_piece(Piece piece, u32 square);
 };

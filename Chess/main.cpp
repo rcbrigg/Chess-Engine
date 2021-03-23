@@ -4,6 +4,9 @@
 #include <iostream>
 #include <random>
 #include <ctime>
+u64 LEAF_COUNT = 0;
+u64 HASH_MISS = 0;
+u64 HASH_QUERY = 0;
 
 void benchmark(u32 depth)
 {
@@ -13,11 +16,16 @@ void benchmark(u32 depth)
 
 	find_best_move(state, depth);
 
-	cout << (std::clock() - start) / (double)CLOCKS_PER_SEC;
+	cout << "time: " << (std::clock() - start) / (double)CLOCKS_PER_SEC << "\n";
+	cout << "leaves: " << LEAF_COUNT << "\n";
+	cout << "hash_table_queries: " << HASH_QUERY << "\n";
+	cout << "hash_table_hit: " << (double)(HASH_MISS) / (double)(HASH_QUERY) << "\n";
+	cout << "hash_table_fullness: " << hash_table_fullness() << "\n";
 }
+
 int main()
 {
-	benchmark(7);
+	benchmark(9);
 	//State state;
 	//state.init();
 	//auto str = state.print();
