@@ -24,39 +24,43 @@ struct Move
 
 struct MovePool
 {
-	MovePool() : count(0) {}
+	MovePool() : count(0), king_captures(false) {}
 
-	static const u32 MAX_MOVES = 256;
+	static const u32 MAX_MOVES = 255;
 
 	Move moves[MAX_MOVES];
+	u8 count;
+	bool king_captures;
 
-	u32 count;
+	void add(Move move, const struct State& state, bool attack);
+};
 
-	void add(Move move)
-	{
-		assert(count < MAX_MOVES);
-		assert((move.to | move.from) < 64);
-		moves[count++] = move;
-	}
+struct PositionAnalysis
+{
+	PositionAnalysis() : score(0) {}
+
+	i16 score;
+
+	void add(Move move, const struct State& state, bool attack);
 };
 
 struct State
 {
 	enum Color : u8
 	{
-		WHITE = 0x0,
-		BLACK = 0x1
+		NONE = 0x0,
+		WHITE = 0x1,
+		BLACK = 0x2
 	};
 
 	enum Type : u8
 	{
-		X = 0x0,
-		P = 0x2,
-		N = 0x4,
-		B = 0x6,
-		R = 0x8,
-		Q = 0xa,
-		K = 0xc
+		P = 0x1 << 2,
+		N = 0x2 << 2,
+		B = 0x3 << 2,
+		R = 0x4 << 2,
+		Q = 0x5 << 2,
+		K = 0x6 << 2
 	};
 
 	enum Castle : u8
@@ -67,11 +71,24 @@ struct State
 		BQ = 0x3,
 	};
 
-	static const u32 COLOR_MASK = 0x1;
-	static const u32 TYPE_MASK = 0xe;
+	static const u32 COLOR_MASK = 0x3;
+	static const u32 TYPE_MASK = 0x7 << 2;
 	const char* piece_to_char = "..PpNnBbRrQqKk";
 	const char* start_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR/ w KQkq - 0 1";
 	//const char* start_FEN = "k7/ppp5/ppp5/8/8/8/5R2/6Nr/ b KQkq - 0 1";
+	//const char* start_FEN = "k7/ppp5/ppp5/8/5Q2/8/6r1/5K2/ b KQkq - 0 1";
+
+	//const char* start_FEN = "1k6/ppp3r1/ppp5/8/8/8/3Q4/5K2/ w KQkq - 0 3";
+	//const char* start_FEN = "1k3Q2/ppp3r1/ppp5/8/8/8/8/5K2/ b KQkq - 0 2";
+	//const char* start_FEN = "k7/ppp5/ppp5/8/4Q3/8/6r1/5K2/ w KQkq - 0 3";
+	//const char* start_FEN = "rnbqkbnr/pppppppp/8/8/8/5N2/PPPPPPPP/RNBQKB1R/ b KQkq - 0 1";
+	//const i16 PAWN_VALUE = 100;
+	//const i16 KNIGHT_VALUE = 300;
+	//const i16 BISHOP_VALUE = 320;
+	//const i16 ROOK_VALUE = 500;
+	//const i16 QUEEN_VALUE = 900;
+	//const i16 KING_VALUE = 20000;
+
 	struct Piece
 	{
 		u8 bits;
@@ -95,8 +112,9 @@ struct State
 	struct Undo
 	{
 		Move move;
+		u8 fifty_move_clock;
 		Piece captured_piece;
-		u32 hash;
+		u64 hash;
 	};
 
 	// Each element represents a square, 0 if empty or (Color | Type)
@@ -116,11 +134,11 @@ struct State
 
 	i8 forward;
 
-	u32 half_moves;
-
 	i16 value;
 
-	u32 hash;
+	u32 half_moves;
+
+	u64 hash;
 
 	void init();
 
@@ -128,15 +146,15 @@ struct State
 
 	bool move(const char* str);
 
-	void get_valid_moves(MovePool& moves) const;
+	void get_moves(MovePool& moves) const;
 
 	void move(Move move);
 
-	void move(Move move, u32 new_hash);
+	void move(Move move, u64 new_hash);
 
 	void unmove(Undo& undo);
 
-	u32 hash_move(Move move) const;
+	u64 hash_move(Move move) const;
 
 	bool from_FEN(string FEN);
 
@@ -144,25 +162,9 @@ struct State
 
 	i16 evaluate_position() const;
 
+	i16 get_piece_value(Piece piece) const;
+
 private:
-	void get_pawn_attack(u8 current, u8 target, MovePool& moves) const;
-
-	void get_pawn_moves(u8 current, MovePool& moves) const;
-
-	void get_range_moves(u8 current, u8 x, u8 y, u8 dx, u8 dy, MovePool& moves) const;
-
-	void add_move_if_valid(u8 current, u8 x, u8 y, MovePool& moves) const;
-
-	void get_knight_moves(u8 current, MovePool& moves) const;
-
-	void get_bishop_moves(u8 current, MovePool& moves) const;
-
-	void get_rook_moves(u8 current, MovePool& moves) const;
-
-	void get_queen_moves(u8 current, MovePool& moves) const;
-
-	void get_king_moves(u8 current, MovePool& moves) const;
-
 	Piece piece_from_char(char piece);
 
 	u8 square_from_notation(const char* str);

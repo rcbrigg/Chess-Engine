@@ -139,15 +139,24 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="config.h" />
     <ClInclude Include="hash_table.h" />
+    <ClInclude Include="kann\kann.h" />
+    <ClInclude Include="kann\kautodiff.h" />
+    <ClInclude Include="nn.h" />
+    <ClInclude Include="nn_hash_table.h" />
     <ClInclude Include="state.h" />
     <ClInclude Include="tree_search.h" />
     <ClInclude Include="types.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="kann\kann.c" />
+    <ClCompile Include="kann\kautodiff.c" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="nn.cpp" />
     <ClCompile Include="state.cpp" />
     <ClCompile Include="tree_search.cpp" />
+    <ClCompile Include="tree_search_nn.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
